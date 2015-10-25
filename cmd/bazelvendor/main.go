@@ -10,35 +10,35 @@ import (
 	"strings"
 )
 
-const buildHeader = `package(default_visibility = ["//visibility:public"])
+const buildHeader = `package(default_visibility = ['//visibility:public'])
 
-load("/tools/def", "go_library", "go_test")`
+load('/tools/def', 'go_library', 'go_test')`
 
 func createBuildFile(pkgName string, pkg *build.Package, with_tests bool, f io.Writer) {
 	fmt.Fprintln(f, buildHeader)
 
 	fmt.Fprintln(f)
-	fmt.Fprintf(f, `go_library(name = "%s",
-  srcs = glob(["*.go"], exclude = ["*_test.go"]),
+	fmt.Fprintf(f, `go_library(name = '%s',
+  srcs = glob(['*.go'], exclude = ['*_test.go']),
   deps = [
 `, pkg.Name)
 	for _, importPkg := range pkg.Imports {
 		if strings.HasPrefix(importPkg, pkgName) {
 			importPkg = strings.Replace(importPkg, pkgName+"/", "", 1)
 			log.Println("Local import:", importPkg)
-			fmt.Fprintf(f, `    "//%s",
+			fmt.Fprintf(f, `    '//%s',
 `, importPkg)
 		} else if strings.HasPrefix(importPkg, "github.com") {
 			log.Println("Github import:", importPkg)
-			fmt.Fprintf(f, `    "//vendor/%s",
+			fmt.Fprintf(f, `    '//vendor/%s',
 `, importPkg)
 		} else if strings.HasPrefix(importPkg, "gopkg.in") {
 			log.Println("gopkg import:", importPkg)
-			fmt.Fprintf(f, `    "//vendor/%s",
+			fmt.Fprintf(f, `    '//vendor/%s',
 `, importPkg)
 		} else if strings.HasPrefix(importPkg, "golang.org") {
 			log.Println("golang import:", importPkg)
-			fmt.Fprintf(f, `    "//vendor/%s",
+			fmt.Fprintf(f, `    '//vendor/%s',
 `, importPkg)
 		} else {
 			log.Println("Std import:", importPkg)
@@ -50,8 +50,8 @@ func createBuildFile(pkgName string, pkg *build.Package, with_tests bool, f io.W
 
 	if len(pkg.TestGoFiles) > 0 {
 		fmt.Fprintln(f)
-		fmt.Fprintf(f, `go_test(name = "%s_test",
-  srcs = glob(["*_test.go"]),
+		fmt.Fprintf(f, `go_test(name = '%s_test',
+  srcs = glob(['*_test.go']),
   deps = [
     ':%s',
 `, pkg.Name, pkg.Name)
@@ -59,19 +59,19 @@ func createBuildFile(pkgName string, pkg *build.Package, with_tests bool, f io.W
 			if strings.HasPrefix(importPkg, pkgName) {
 				importPkg = strings.Replace(importPkg, pkgName+"/", "", 1)
 				log.Println("Local import:", importPkg)
-				fmt.Fprintf(f, `    "//%s",
+				fmt.Fprintf(f, `    '//%s',
 `, importPkg)
 			} else if strings.HasPrefix(importPkg, "github.com") {
 				log.Println("Github import:", importPkg)
-				fmt.Fprintf(f, `    "//vendor/%s",
+				fmt.Fprintf(f, `    '//vendor/%s',
 `, importPkg)
 			} else if strings.HasPrefix(importPkg, "gopkg.in") {
 				log.Println("gopkg import:", importPkg)
-				fmt.Fprintf(f, `    "//vendor/%s",
+				fmt.Fprintf(f, `    '//vendor/%s',
 `, importPkg)
 			} else if strings.HasPrefix(importPkg, "golang.org") {
 				log.Println("golang import:", importPkg)
-				fmt.Fprintf(f, `    "//vendor/%s",
+				fmt.Fprintf(f, `    '//vendor/%s',
 `, importPkg)
 			} else {
 				log.Println("Std import:", importPkg)
