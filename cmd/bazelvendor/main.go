@@ -18,10 +18,16 @@ func createBuildFile(pkgName string, pkg *build.Package, with_tests bool, f io.W
 	fmt.Fprintln(f, buildHeader)
 
 	fmt.Fprintln(f)
+	excludedFiles := ""
+	if len(pkg.IgnoredGoFiles) > 0 {
+		for _, ign := range pkg.IgnoredGoFiles {
+			excludedFiles = excludedFiles + fmt.Sprintf(", '%s'", ign)
+		}
+	}
 	fmt.Fprintf(f, `go_library(name = '%s',
-  srcs = glob(['*.go'], exclude = ['*_test.go']),
+  srcs = glob(['*.go'], exclude = ['*_test.go'%s]),
   deps = [
-`, pkg.Name)
+`, pkg.Name, excludedFiles)
 	for _, importPkg := range pkg.Imports {
 		if strings.HasPrefix(importPkg, pkgName) {
 			importPkg = strings.Replace(importPkg, pkgName+"/", "", 1)
@@ -51,11 +57,19 @@ func createBuildFile(pkgName string, pkg *build.Package, with_tests bool, f io.W
 	if len(pkg.TestGoFiles) > 0 {
 		fmt.Fprintln(f)
 		fmt.Fprintf(f, `go_test(name = '%s_test',
-  srcs = glob(['*_test.go']),
+  srcs = glob(['*.go']),
   deps = [
     ':%s',
 `, pkg.Name, pkg.Name)
+
+		var importList = make(map[string]bool)
 		for _, importPkg := range pkg.TestImports {
+			importList[importPkg] = true
+		}
+		for _, importPkg := range pkg.Imports {
+			importList[importPkg] = true
+		}
+		for importPkg, _ := range importList {
 			if strings.HasPrefix(importPkg, pkgName) {
 				importPkg = strings.Replace(importPkg, pkgName+"/", "", 1)
 				log.Println("Local import:", importPkg)
