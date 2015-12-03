@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"sort"
 	"strings"
 )
 
@@ -24,6 +25,7 @@ func createBuildFile(pkgName string, pkg *build.Package, with_tests bool, f io.W
 			excludedFiles = excludedFiles + fmt.Sprintf(", '%s'", ign)
 		}
 	}
+
 	fmt.Fprintf(f, `go_library(name = '%s',
   srcs = glob(['*.go'], exclude = ['*_test.go'%s]),
   deps = [
@@ -55,6 +57,7 @@ func createBuildFile(pkgName string, pkg *build.Package, with_tests bool, f io.W
 `)
 
 	if len(pkg.TestGoFiles) > 0 {
+		log.Println("Test imports:")
 		fmt.Fprintln(f)
 		fmt.Fprintf(f, `go_test(name = '%s_test',
   srcs = glob(['*.go']),
@@ -69,7 +72,12 @@ func createBuildFile(pkgName string, pkg *build.Package, with_tests bool, f io.W
 		for _, importPkg := range pkg.Imports {
 			importList[importPkg] = true
 		}
+		var importPkgs = []string{}
 		for importPkg, _ := range importList {
+			importPkgs = append(importPkgs, importPkg)
+		}
+		sort.Strings(importPkgs)
+		for _, importPkg := range importPkgs {
 			if strings.HasPrefix(importPkg, pkgName) {
 				importPkg = strings.Replace(importPkg, pkgName+"/", "", 1)
 				log.Println("Local import:", importPkg)
